@@ -169,7 +169,7 @@ const configureFetch = function() {
                     json: () => Promise.resolve(body)});
             };
             
-            setTimeout(handleRoute, 1000);
+            setTimeout(handleRoute, url.startsWith('https://test.net') ? 400 : 0);
 
         });
     };
