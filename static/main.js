@@ -175,6 +175,44 @@ const configureFetch = function() {
     };
 };
 
+const getProblemContext = function() {
+    const problem_id = state['problem_selector']['selected_id'];
+    if (problem_id === null) {
+        return {
+            'requests_remaining': 1,
+            'points_remaining': 1,
+            'points': []
+        };
+    }
+    const problem = state['problems'].find(p => { return p.id == problem_id });
+    const requests = state['requests'].reduce((prev, next) => {
+        if (next.problem_id == problem_id) {
+            prev.push(next);
+        }
+        return prev;
+    }, []);
+    request_ids = requests.map((r) => r.id)
+        .sort((a, b) => a.id > b.id ? -1 : 1);
+    let problem_points = state['points'].reduce((prev, next) => {
+        let r = requests.find(r => r.id == next.request_id);
+        if (request_ids.includes(next.request_id)) {
+            prev.push({
+                ...next,
+                ...{timestamp: r.timestamp},
+                ...{request_no: request_ids.indexOf(r.id) + 1},
+                ...{point_no: prev.length + 1}
+            });
+        }
+        return prev;
+    }, []);
+    problem_points.sort((a, b) => a.id > b.id ? -1 : 1);
+    return {
+        'requests_remaining': problem.max_requests - request_ids.length,
+        'points_remaining': problem.max_points - problem_points.length,
+        'points': problem_points
+    }
+};
+
 const fetchInfo = function(student_id, onSuccess, onFailure) {
     console.log('[fetchInfo] student_id =', student_id);
     fetch(api_base_url + '/info', {
@@ -362,34 +400,7 @@ const ProblemSelector = {
 
 const RequestsTable = {
     getData: () => {
-        problem_id = state['problem_selector']['selected_id'];
-        problem = state['problems'].find(p => { return p.id == problem_id });
-        requests = state['requests'].reduce((prev, next) => {
-            if (next.problem_id == problem_id) {
-                prev.push(next);
-            }
-            return prev;
-        }, []);
-        request_ids = requests.map((r) => r.id)
-            .sort((a, b) => a.id > b.id ? -1 : 1);
-        let problem_points = state['points'].reduce((prev, next) => {
-            let r = requests.find(r => r.id == next.request_id);
-            if (request_ids.includes(next.request_id)) {
-                prev.push({
-                    ...next,
-                    ...{timestamp: r.timestamp},
-                    ...{request_no: request_ids.indexOf(r.id) + 1},
-                    ...{point_no: prev.length + 1}
-                });
-            }
-            return prev;
-        }, []);
-        problem_points.sort((a, b) => a.id > b.id ? -1 : 1);
-        return {
-            'requests_remaining': problem.max_requests - request_ids.length,
-            'points_remaining': problem.max_points - problem_points.length,
-            'points': problem_points
-        }
+        return getProblemContext();
     },
 
     render: () => {
@@ -432,12 +443,20 @@ const NewRequest = {
         const isFloat = function(x) {
             return typeof(x) === 'number' && !Number.isNaN(x);
         };
+        if (!data.trim().length) { 
+            throw new Error('Invalid points. Enter your points in the textbox, one ordered-pair per line.');
+        }
         const err_msg = 'Invalid points. Must be two numbers per line, separated by a comma.';
         let lines = data.split(/\r?\n|\r|\n/g).map(x => x.trim());
         console.log('lines =', lines);
         lines = lines.filter(x => {
             return x.length && x.includes(',');
         });
+        const problem_context = getProblemContext();
+        const points_remaining = problem_context['points_remaining'];
+        if (lines.length > points_remaining) {
+            throw new Error(`Too many points. You have only ${points_remaining} remaining.`);
+        }
         return lines.map(x => {
             vals = x.split(',');
             if (vals.length !== 2) { throw new Error(err_msg); }
@@ -455,7 +474,6 @@ const NewRequest = {
             console.log('[NewRequest.addRequest]');
             let textarea = document.getElementById('input-data');
             data = textarea.value;
-            if (!data.length) { return; }
             problem_id = state['problem_selector']['selected_id']
             points_to_add = NewRequest.parseInput(data);
             if (points_to_add.length == 0) {
@@ -499,6 +517,7 @@ const NewRequest = {
 
     hasRequestsRemaining: () => {
         let problem_id = state['problem_selector']['selected_id'];
+        if (problem_id === null) return true;
         let problem = state['problems'].find((x) => {
             return x.id === problem_id
         });
@@ -536,7 +555,8 @@ const NewRequest = {
     render: () => {
         console.log('[NewRequest.render]');
         let children = [];
-        if (isLoggedIn() && NewRequest.hasRequestsRemaining() && NewRequest.hasPointsRemaining()) {
+        data = getProblemContext();
+        if (isLoggedIn() && data['requests_remaining'] > 0 && data['points_remaining'] > 0) {
             let textarea = document.createElement('textarea');
             textarea.setAttribute('id', 'input-data');
             textarea.setAttribute('rows', 10);
