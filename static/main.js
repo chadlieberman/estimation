@@ -58,6 +58,90 @@ const configureFetch = function() {
         const body = opts.body && JSON.parse(opts.body);
         console.log(`${method} ${url}:\nheaders: ${JSON.stringify(headers)}\nbody: ${JSON.stringify(body)}`);
 
+        const start_response = function(user_id) {
+            return {
+                user: {
+                    id: parseInt(user_id),
+                    name: 'Chad L.'
+                },
+                problems: [
+                    {
+                        id: 1,
+                        name: 'Test problem',
+                        description: 'A fun one where you can take as many guesses as you want',
+                        max_requests: 99999,
+                        max_points: 9999999
+                    },
+                    {
+                        id: 2,
+                        name: 'The real deal',
+                        description: 'This is the one that really counts',
+                        max_requests: 3,
+                        max_points: 10
+                    }
+                ],
+                requests: [],
+                points: []
+            }
+        };
+
+        const full_info_response = function(user_id) {
+            return {
+                user: {
+                    id: parseInt(user_id),
+                    name: 'Chad L.'
+                },
+                problems: [
+                    {
+                        id: 1,
+                        name: 'Test problem',
+                        description: 'A fun one where you can take as many guesses as you want',
+                        max_requests: 99999,
+                        max_points: 9999999
+                    },
+                    {
+                        id: 2,
+                        name: 'The real deal',
+                        description: 'This is the one that really counts',
+                        max_requests: 3,
+                        max_points: 10
+                    }
+                ],
+                requests: [
+                    {
+                        id: 1,
+                        timestamp: 1660164991,
+                        problem_id: 1
+                    },
+                    {
+                        id: 4,
+                        timestamp: 1660134235,
+                        problem_id: 1
+                    }
+                ],
+                points: [
+                    {
+                        id: 1,
+                        request_id: 1,
+                        input: [2.353, 5.349],
+                        output: -2.78
+                    },
+                    {
+                        id: 2,
+                        request_id: 1,
+                        input: [-1.355, 2.542],
+                        output: 1.583
+                    },
+                    {
+                        id: 9,
+                        request_id: 4,
+                        input: [0.356, 7.244],
+                        output: 5.5845
+                    }
+                ]
+            }
+        };
+
         return new Promise((resolve, reject) => {
             const handleRoute = function() {
                 switch(true) {
@@ -76,60 +160,8 @@ const configureFetch = function() {
 
             const getInfo = function(user_id) {
                 console.log('[getInfo]');
-                return ok({
-                    user: {
-                        id: parseInt(user_id),
-                        name: 'Chad L.'
-                    },
-                    problems: [
-                        {
-                            id: 1,
-                            name: 'Test problem',
-                            description: 'A fun one where you can take as many guesses as you want',
-                            max_requests: 99999,
-                            max_points: 9999999
-                        },
-                        {
-                            id: 2,
-                            name: 'The real deal',
-                            description: 'This is the one that really counts',
-                            max_requests: 3,
-                            max_points: 10
-                        }
-                    ],
-                    requests: [
-                        {
-                            id: 1,
-                            timestamp: 1660164991,
-                            problem_id: 1
-                        },
-                        {
-                            id: 4,
-                            timestamp: 1660134235,
-                            problem_id: 1
-                        }
-                    ],
-                    points: [
-                        {
-                            id: 1,
-                            request_id: 1,
-                            input: [2.353, 5.349],
-                            output: -2.78
-                        },
-                        {
-                            id: 2,
-                            request_id: 1,
-                            input: [-1.355, 2.542],
-                            output: 1.583
-                        },
-                        {
-                            id: 9,
-                            request_id: 4,
-                            input: [0.356, 7.244],
-                            output: 5.5845
-                        }
-                    ]
-                });
+                //return ok(full_info_response(user_id));
+                return ok(start_response(user_id));
             };
 
             const addRequest = function(student_id, problem_id, points_to_add) {
