@@ -61,7 +61,7 @@ const configureFetch = function() {
         const start_response = function(user_id) {
             return {
                 user: {
-                    id: parseInt(user_id),
+                    id: user_id,
                     name: 'Chad L.'
                 },
                 problems: [
@@ -88,7 +88,7 @@ const configureFetch = function() {
         const full_info_response = function(user_id) {
             return {
                 user: {
-                    id: parseInt(user_id),
+                    id: user_id,
                     name: 'Chad L.'
                 },
                 problems: [
